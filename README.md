@@ -6,11 +6,6 @@ Clone Repositório
 git clone https://github.com/eduardogamer78/docker-setup.git
 ```
 
-Clone os Arquivos do Laravel
-```sh
-git clone seu projeto nome-app
-```
-
 Copie os arquivos docker-compose.yml, Dockerfile e o diretório docker/ para o seu projeto
 ```sh
 cp -rf setup-docker/* app-laravel/
