@@ -1,0 +1,65 @@
+services:
+  app:
+    build:
+        context: .
+        dockerfile: ./docker/Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - redis
+    networks:
+      - laravel
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/:/etc/nginx/conf.d/
+    networks:
+      - laravel
+  
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+        MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+        MYSQL_ROOT_HOST: '%'
+        MYSQL_DATABASE: '${DB_DATABASE}'
+        MYSQL_USER: '${DB_USERNAME}'
+        MYSQL_PASSWORD: '${DB_PASSWORD}'
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+        - 'sail-mariadb:/var/lib/mysql'
+    ports:
+        - "3306:3306"
+    networks:
+        - laravel
+  
+  redis:
+    image: 'redis:alpine'
+    volumes:
+        - 'sail-redis:/data'
+    networks:
+        - laravel
+    healthcheck:
+        test:
+            - CMD
+            - redis-cli
+            - ping
+        retries: 3
+        timeout: 5s
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+    sail-mariadb:
+        driver: local
+    sail-redis:
+        driver: local
