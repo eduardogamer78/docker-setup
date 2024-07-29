@@ -1,26 +1,40 @@
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
-# set your user name, ex: user=carlos
-ARG user=yourusername
+ARG user=ubuntu
 ARG uid=1000
 
-## apt-utils é um extensão de recursos do gerenciador de pacotes apt
-RUN apt-get update && apt-get install -y --no-install-recommends \
-   apt-utils
-
-## dependencias recomendadas de desenvolvimento para ambiente linux
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
     curl \
-    git \ 
-    zip \
-    unzip \
     libpng-dev \
     libonig-dev \
-    libxml2-dev
+    libxml2-dev \
+    libcap2-bin \
+    libpng-dev \
+    librsvg2-bin \
+    zip \
+    unzip
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    gnupg \
+    gosu \
+    ca-certificates \
+    supervisor \
+    sqlite3 \
+    dnsutils \
+    fswatch \
+    ffmpeg \
+    openssl \
+    libssl-dev \
+    procps \
+    nano
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets intl
+
+RUN pecl install pcov && \
+    docker-php-ext-enable pcov
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -30,12 +44,18 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+# Install redis
 RUN pecl install -o -f redis \
     &&  rm -rf /tmp/pear \
     &&  docker-php-ext-enable redis
 
-COPY ./docker/php/extra-php.ini "$PHP_INI_DIR/extra-php.ini/"
-
+# Set working directory
 WORKDIR /var/www
+
+# Copy custom configurations PHP
+COPY docker/php/custom.ini /usr/local/etc/php/custom.ini
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER $user
