@@ -53,7 +53,7 @@ RUN pecl install -o -f redis \
 WORKDIR /var/www
 
 # Copy custom configurations PHP
-COPY docker/php/custom.ini /usr/local/etc/php/custom.ini
+COPY docker/php/extra-php.ini /usr/local/etc/php/extra-php.ini
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
